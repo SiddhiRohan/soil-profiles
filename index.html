@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Israeli Soil Profiles</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Code+Pro:wght@400;500&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js"></script>
+<style>
+  :root {
+    --sand:    #f5efe4;
+    --clay:    #c4a882;
+    --soil:    #6b4f35;
+    --dark:    #2a1f14;
+    --sienna:  #8b3a1a;
+    --nari:    #d4b896;
+    --text:    #3a2d22;
+    --muted:   #8a7060;
+    --border:  #d8c9b5;
+    --accent:  #8b3a1a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--sand);
+    color: var(--text);
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* Soil texture background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    position: relative;
+    background: var(--dark);
+    color: var(--sand);
+    padding: 48px 60px 40px;
+    border-bottom: 4px solid var(--sienna);
+    overflow: hidden;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--sienna), var(--clay), var(--nari), var(--clay), var(--sienna));
+  }
+
+  .header-stratum {
+    position: absolute;
+    left: 0; right: 0;
+    opacity: 0.07;
+  }
+  .header-stratum:nth-child(1) { top: 0;  height: 28px; background: #c4a882; }
+  .header-stratum:nth-child(2) { top: 28px; height: 18px; background: #8b6914; }
+  .header-stratum:nth-child(3) { top: 46px; height: 35px; background: #6b4226; }
+
+  .header-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+  }
+
+  .header-eyebrow {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--clay);
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: var(--sand);
+    margin-bottom: 12px;
+  }
+
+  h1 span {
+    color: var(--clay);
+  }
+
+  .header-sub {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 18px;
+    color: var(--nari);
+    max-width: 560px;
+  }
+
+  .header-meta {
+    margin-top: 24px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .meta-pill {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    border: 1px solid #3a2d22;
+    padding: 4px 12px;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+  }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── CONTROLS PANEL ── */
+  .controls {
+    background: white;
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--sienna);
+    padding: 28px 32px;
+    margin-bottom: 40px;
+    box-shadow: 0 2px 12px rgba(42,31,20,0.06);
+  }
+
+  .controls-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: end;
+  }
+
+  label {
+    display: block;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  select {
+    width: 100%;
+    padding: 12px 16px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 16px;
+    color: var(--text);
+    background: var(--sand);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7060' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+    transition: border-color 0.2s;
+  }
+
+  select:focus {
+    outline: none;
+    border-color: var(--sienna);
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 10px;
+  }
+
+  button {
+    padding: 12px 24px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: none;
+    border-radius: 2px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: var(--sienna);
+    color: white;
+  }
+  .btn-primary:hover { background: #7a3216; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; transform: none; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--sienna);
+    border: 1px solid var(--sienna);
+  }
+  .btn-secondary:hover { background: var(--sienna); color: white; }
+  .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── STATUS ── */
+  .status {
+    margin-top: 16px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .spinner {
+    width: 12px; height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--sienna);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  .spinner.active { display: block; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── PREVIEW PANEL ── */
+  .preview-panel {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .preview-panel.visible { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .preview-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--dark);
+  }
+
+  .preview-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  /* The actual document preview */
+  .doc-preview {
+    background: white;
+    border: 1px solid var(--border);
+    padding: 56px 64px;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #1a1a1a;
+    white-space: pre-wrap;
+    box-shadow: 0 4px 24px rgba(42,31,20,0.08);
+    max-height: 640px;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  /* Scroll indicator */
+  .doc-preview::after {
+    content: '';
+    position: sticky;
+    bottom: 0;
+    display: block;
+    height: 48px;
+    background: linear-gradient(to bottom, transparent, white);
+    pointer-events: none;
+  }
+
+  /* ── STRATUM LEGEND ── */
+  .legend {
+    margin-top: 48px;
+    padding: 24px 28px;
+    background: white;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--clay);
+  }
+
+  .legend-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--soil);
+    margin-bottom: 14px;
+  }
+
+  .legend-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px 20px;
+  }
+
+  .legend-item {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    gap: 8px;
+  }
+
+  .legend-code {
+    color: var(--sienna);
+    font-weight: 500;
+    min-width: 32px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 24px;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    header { padding: 32px 24px 28px; }
+    main { padding: 32px 16px 60px; }
+    .controls { padding: 20px; }
+    .controls-grid { grid-template-columns: 1fr; }
+    .doc-preview { padding: 32px 24px; }
+    .btn-group { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-stratum"></div>
+  <div class="header-stratum"></div>
+  <div class="header-stratum"></div>
+  <div class="header-inner">
+    <div class="header-eyebrow">University of Maryland</div>
+    <h1>Israeli <span>Soil</span> Profiles</h1>
+    <p class="header-sub">Relational Database and Interactive Mapping System — Digitized Legacy Hebrew Survey Field Books</p>
+    <div class="header-meta">
+      <span class="meta-pill">111 profiles</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <div class="section-label">Generate Pedon Description</div>
+
+  <div class="controls">
+    <div class="controls-grid">
+      <div>
+        <label for="profileSelect">Select Soil Profile</label>
+        <select id="profileSelect" disabled>
+          <option value="">— Loading profiles…</option>
+        </select>
+      </div>
+      <div class="btn-group">
+        <button class="btn-primary" id="generateBtn" disabled>Generate</button>
+        <button class="btn-secondary" id="downloadBtn" disabled>↓ .docx</button>
+      </div>
+    </div>
+    <div class="status">
+      <div class="spinner" id="spinner"></div>
+      <span id="statusText">Connecting to database…</span>
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div class="preview-panel" id="previewPanel">
+    <div class="preview-header">
+      <div class="preview-title" id="previewTitle"></div>
+      <div class="preview-actions">
+        <button class="btn-secondary" id="downloadBtn2">↓ Download .docx</button>
+      </div>
+    </div>
+    <div class="doc-preview" id="docPreview"></div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-title">Field Book Code Reference</div>
+    <div class="legend-grid">
+      <div class="legend-item"><span class="legend-code">ABK</span> angular blocky</div>
+      <div class="legend-item"><span class="legend-code">SBK</span> subangular blocky</div>
+      <div class="legend-item"><span class="legend-code">PR</span> prismatic</div>
+      <div class="legend-item"><span class="legend-code">GR</span> granular</div>
+      <div class="legend-item"><span class="legend-code">MA</span> massive</div>
+      <div class="legend-item"><span class="legend-code">SG</span> single grain</div>
+      <div class="legend-item"><span class="legend-code">EH</span> extremely hard</div>
+      <div class="legend-item"><span class="legend-code">VH</span> very hard</div>
+      <div class="legend-item"><span class="legend-code">FR</span> friable</div>
+      <div class="legend-item"><span class="legend-code">FI</span> firm</div>
+      <div class="legend-item"><span class="legend-code">VS</span> very sticky</div>
+      <div class="legend-item"><span class="legend-code">SS</span> slightly sticky</div>
+      <div class="legend-item"><span class="legend-code">VP</span> very plastic</div>
+      <div class="legend-item"><span class="legend-code">SP</span> slightly plastic</div>
+      <div class="legend-item"><span class="legend-code">SO/PO</span> nonsticky/nonplastic</div>
+      <div class="legend-item"><span class="legend-code">cs/gs</span> clear/gradual smooth</div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Israeli Soil Profiles Database &nbsp;·&nbsp; University of Maryland &nbsp;·&nbsp; USDA NRCS Standards
+</footer>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────
+const SUPABASE_URL  = 'https://arfqsmhpkswwstaumgnq.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFyZnFzbWhwa3N3d3N0YXVtZ25xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0NDczNTcsImV4cCI6MjA3ODAyMzM1N30.TtNzarJZuikOUEZm9J4Bae36kC-33CPhep-CGdRL0m4';
+
+const headers = {
+  'apikey': SUPABASE_ANON,
+  'Authorization': 'Bearer ' + SUPABASE_ANON,
+  'Content-Type': 'application/json'
+};
+
+// ── ELEMENTS ────────────────────────────────────────────────
+const profileSelect = document.getElementById('profileSelect');
+const generateBtn   = document.getElementById('generateBtn');
+const downloadBtn   = document.getElementById('downloadBtn');
+const downloadBtn2  = document.getElementById('downloadBtn2');
+const spinner       = document.getElementById('spinner');
+const statusText    = document.getElementById('statusText');
+const previewPanel  = document.getElementById('previewPanel');
+const previewTitle  = document.getElementById('previewTitle');
+const docPreview    = document.getElementById('docPreview');
+
+let currentText = '';
+let currentProfile = '';
+
+// ── HELPERS ─────────────────────────────────────────────────
+function setStatus(msg, loading = false) {
+  statusText.textContent = msg;
+  spinner.classList.toggle('active', loading);
+}
+
+async function supabaseRpc(fn, params) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(params)
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || res.statusText);
+  }
+  return res.json();
+}
+
+async function supabaseGet(table, select = '*', order = '') {
+  let url = `${SUPABASE_URL}/rest/v1/${table}?select=${select}`;
+  if (order) url += `&order=${order}`;
+  const res = await fetch(url, { headers });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+// ── LOAD PROFILES ────────────────────────────────────────────
+async function loadProfiles() {
+  try {
+    const data = await supabaseGet('soil_profile', 'profile_identifier', 'profile_identifier.asc');
+    profileSelect.innerHTML = '<option value="">— Select a profile —</option>';
+    data.forEach(row => {
+      const opt = document.createElement('option');
+      opt.value = row.profile_identifier.trim();
+      opt.textContent = row.profile_identifier.trim();
+      profileSelect.appendChild(opt);
+    });
+    profileSelect.disabled = false;
+    generateBtn.disabled = false;
+    setStatus(`${data.length} profiles loaded. Select one to generate a description.`);
+  } catch (e) {
+    setStatus('Error loading profiles: ' + e.message);
+  }
+}
+
+// ── GENERATE ─────────────────────────────────────────────────
+generateBtn.addEventListener('click', async () => {
+  const profile = profileSelect.value.trim();
+  if (!profile) { setStatus('Please select a profile first.'); return; }
+
+  generateBtn.disabled = true;
+  downloadBtn.disabled = true;
+  previewPanel.classList.remove('visible');
+  setStatus(`Generating description for ${profile}…`, true);
+
+  try {
+    const text = await supabaseRpc('generate_pedon_description', {
+      p_profile_identifier: profile
+    });
+
+    currentText    = text;
+    currentProfile = profile;
+
+    docPreview.textContent  = text;
+    previewTitle.textContent = profile + ' Series';
+    previewPanel.classList.add('visible');
+    previewPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    downloadBtn.disabled  = false;
+    setStatus(`Description generated for ${profile}.`);
+  } catch (e) {
+    setStatus('Error: ' + e.message);
+  } finally {
+    generateBtn.disabled = false;
+    spinner.classList.remove('active');
+  }
+});
+
+// ── DOWNLOAD .docx ────────────────────────────────────────────
+async function downloadDocx() {
+  if (!currentText) return;
+
+  setStatus('Building .docx file…', true);
+
+  try {
+    const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
+
+    const lines = currentText.split('\n');
+    const children = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      // SERIES TITLE (all caps, short, standalone)
+      if (trimmed.endsWith('SERIES') && trimmed === trimmed.toUpperCase() && trimmed.split(' ').length <= 4) {
+        children.push(new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 120, after: 120 },
+          children: [new TextRun({ text: trimmed, bold: true, size: 28, font: 'Times New Roman' })]
+        }));
+
+      // SECTION HEADERS (all caps keywords)
+      } else if (/^(TAXONOMIC CLASS|TYPICAL PEDON|TYPE LOCATION|GEOGRAPHIC SETTING|USE AND VEGETATION|DISTRIBUTION|REMARKS|REFERENCES|LOCATION|Established Series|National Cooperative)/.test(trimmed)) {
+        const isBold = trimmed === trimmed.toUpperCase() || trimmed.startsWith('TAXONOMIC') || trimmed.startsWith('TYPICAL') || trimmed.startsWith('TYPE') || trimmed.startsWith('GEOGRAPHIC') || trimmed.startsWith('USE AND') || trimmed.startsWith('REMARKS') || trimmed.startsWith('REFERENCES');
+        children.push(new Paragraph({
+          spacing: { before: 200, after: 60 },
+          children: [new TextRun({ text: trimmed, bold: isBold, size: 24, font: 'Times New Roman' })]
+        }));
+
+      // HORIZON LABELS (ends with --)
+      } else if (trimmed.endsWith('--')) {
+        children.push(new Paragraph({
+          spacing: { before: 160, after: 0 },
+          children: [new TextRun({ text: trimmed, bold: true, size: 24, font: 'Times New Roman' })]
+        }));
+
+      // EMPTY LINES
+      } else if (trimmed === '') {
+        children.push(new Paragraph({ spacing: { before: 0, after: 60 }, children: [new TextRun('')] }));
+
+      // NORMAL BODY
+      } else {
+        children.push(new Paragraph({
+          spacing: { before: 0, after: 60 },
+          children: [new TextRun({ text: trimmed, size: 24, font: 'Times New Roman' })]
+        }));
+      }
+    }
+
+    const doc = new Document({
+      sections: [{
+        properties: {
+          page: {
+            size: { width: 12240, height: 15840 },
+            margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
+          }
+        },
+        children
+      }]
+    });
+
+    const buffer = await Packer.toBuffer(doc);
+    const blob   = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const url    = URL.createObjectURL(blob);
+    const a      = document.createElement('a');
+    a.href       = url;
+    a.download   = currentProfile.replace(/\s+/g, '_') + '_Pedon_Description.docx';
+    a.click();
+    URL.revokeObjectURL(url);
+
+    setStatus('Downloaded: ' + a.download);
+  } catch (e) {
+    setStatus('Download error: ' + e.message);
+    console.error(e);
+  } finally {
+    spinner.classList.remove('active');
+  }
+}
+
+downloadBtn.addEventListener('click', downloadDocx);
+downloadBtn2.addEventListener('click', downloadDocx);
+
+// ── INIT ─────────────────────────────────────────────────────
+loadProfiles();
+</script>
+</body>
+</html>
